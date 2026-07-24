@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnboardAI Tour Builder — Create Guided Tours</title>
+<meta name="description" content="Create step-by-step guided tours for onboarding users to any web application.">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a1628;
+    --surface: #0d2035;
+    --teal: #3eb8d0;
+    --gold1: #e8b848;
+    --gold2: #d4a84a;
+    --text: #fffef5;
+    --muted: #a8d5df;
+    --danger: #f87171;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(62, 184, 208, 0.15);
+    background: var(--surface);
+  }
+  .header .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .header .brand img { width: 28px; height: 28px; border-radius: 6px; }
+  .header .brand b { color: var(--teal); }
+  .header h1 { font-size: 18px; font-weight: 800; }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: calc(100vh - 65px);
+  }
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+
+  /* Sidebar */
+  .sidebar {
+    border-right: 1px solid rgba(62, 184, 208, 0.15);
+    padding: 20px;
+    background: rgba(13, 32, 53, 0.5);
+  }
+  .sidebar h2 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .tour-list {
+    list-style: none;
+  }
+  .tour-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .tour-list li:hover { background: rgba(62, 184, 208, 0.1); }
+  .tour-list li.active { background: rgba(62, 184, 208, 0.2); }
+  .tour-list li .name { font-weight: 600; font-size: 14px; }
+  .tour-list li .steps { font-size: 11px; color: var(--muted); }
+  .tour-list li .edit-btn {
+    opacity: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .tour-list li:hover .edit-btn { opacity: 1; }
+  .tour-list li .edit-btn:hover { background: rgba(62, 184, 208, 0.2); color: var(--text); }
+
+  .new-tour-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px;
+    margin-top: 12px;
+    border: 2px dashed rgba(62, 184, 208, 0.35);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--teal);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .new-tour-btn:hover { border-color: var(--teal); background: rgba(62, 184, 208, 0.08); }
+
+  /* Main editor */
+  .editor {
+    padding: 24px 32px;
+    max-width: 800px;
+  }
+  .editor-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--muted);
+    text-align: center;
+  }
+  .editor-empty p { font-size: 15px; margin-top: 8px; }
+
+  /* Form fields */
+  .field { margin-bottom: 20px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid rgba(168, 213, 223, 0.25);
+    border-radius: 9px;
+    background: rgba(255, 254, 245, 0.06);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--teal);
+    background: rgba(255, 254, 245, 0.1);
+  }
+  .field input::placeholder, .field textarea::placeholder { color: rgba(168, 213, 223, 0.55); }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* Steps list */
+  .steps-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(62, 184, 208, 0.15);
+  }
+  .steps-section h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .add-step-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background: var(--teal);
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .add-step-btn:hover { filter: brightness(1.1); }
+
+  .step-card {
+    background: rgba(13, 32, 53, 0.65);
+    border: 1px solid rgba(62, 184, 208, 0.18);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .step-card.dragging { opacity: 0.5; }
+  .step-card .step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .step-card .step-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .step-card .step-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .step-card .step-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .step-card .step-actions button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .step-card .step-actions button:hover { background: rgba(62, 184, 208, 0.15); color: var(--text); }
+  .step-card .step-actions button.delete:hover { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+
+  .step-card .step-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .step-card .step-content .full { grid-column: 1 / -1; }
+  .step-card .step-content input, .step-card .step-content select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1.5px solid rgba(168, 213, 223, 0.2);
+    border-radius: 7px;
+    background: rgba(255, 254, 245, 0.04);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+  }
+  .step-card .step-content input:focus, .step-card .step-content select:focus {
+    border-color: var(--teal);
+  }
+  .step-card .step-content label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  /* Action buttons */
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(62, 184, 208, 0.15);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold1), var(--gold2));
+    color: var(--navy);
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-secondary {
+    background: rgba(62, 184, 208, 0.15);
+    color: var(--teal);
+  }
+  .btn-secondary:hover { background: rgba(62, 184, 208, 0.25); }
+  .btn-danger {
+    background: rgba(248, 113, 113, 0.15);
+    color: var(--danger);
+  }
+  .btn-danger:hover { background: rgba(248, 113, 113, 0.25); }
+
+  /* Preview link */
+  .preview-link {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(232, 184, 72, 0.08);
+    border: 1px solid rgba(232, 184, 72, 0.25);
+    border-radius: 8px;
+  }
+  .preview-link p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .preview-link code {
+    display: block;
+    font-size: 13px;
+    color: var(--gold1);
+    word-break: break-all;
+  }
+
+  /* Toast notification */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 18px;
+    background: var(--surface);
+    border: 1px solid rgba(62, 184, 208, 0.35);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(3, 8, 16, 0.5);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: #22c55e; color: #22c55e; }
+</style>
+</head>
+<body>
+<header class="header">
+  <a href="index.html" class="brand">
+    <img src="icon.png" alt="">
+    <span>Onboard<b>AI</b></span>
+  </a>
+  <h1>Tour Builder</h1>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h2>Your Tours</h2>
+    <ul class="tour-list" id="tourList">
+      <!-- Populated by JS -->
+    </ul>
+    <button class="new-tour-btn" id="newTourBtn">+ New Tour</button>
+  </aside>
+
+  <main class="editor" id="editor">
+    <div class="editor-empty" id="editorEmpty">
+      <p>Select a tour to edit, or create a new one.</p>
+    </div>
+
+    <div id="editorContent" style="display: none;">
+      <div class="field">
+        <label>Tour ID</label>
+        <input type="text" id="tourId" placeholder="e.g., connect-ghl">
+      </div>
+
+      <div class="field">
+        <label>Tour Name</label>
+        <input type="text" id="tourName" placeholder="e.g., Connect GoHighLevel">
+      </div>
+
+      <div class="field">
+        <label>Start URL</label>
+        <input type="url" id="tourStartUrl" placeholder="https://app.example.com/settings">
+      </div>
+
+      <div class="steps-section">
+        <h3>
+          <span>Steps</span>
+          <button class="add-step-btn" id="addStepBtn">+ Add Step</button>
+        </h3>
+        <div id="stepsList">
+          <!-- Steps populated by JS -->
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="exportBtn">📥 Export JSON</button>
+        <button class="btn btn-secondary" id="previewBtn">👁 Preview</button>
+        <button class="btn btn-secondary" id="saveBtn">💾 Save Draft</button>
+        <button class="btn btn-danger" id="deleteBtn">🗑 Delete</button>
+      </div>
+
+      <div class="preview-link" id="previewLink" style="display: none;">
+        <p>Add <code>?onboard=<span id="previewTourId"></span></code> to any URL to test this tour:</p>
+        <code id="previewUrl"></code>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Tour Builder App
+const STORAGE_KEY = 'onboardai_tours_draft';
+
+let tours = [];
+let currentTourIndex = -1;
+
+// Load from localStorage
+function loadTours() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    tours = JSON.parse(saved);
+  }
+  renderTourList();
+}
+
+// Save to localStorage
+function saveTours() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tours));
+}
+
+// Render tour list in sidebar
+function renderTourList() {
+  const list = document.getElementById('tourList');
+  list.innerHTML = tours.map((tour, i) => `
+    <li class="${i === currentTourIndex ? 'active' : ''}" data-index="${i}">
+      <div>
+        <div class="name">${escapeHtml(tour.name || 'Untitled Tour')}</div>
+        <div class="steps">${tour.steps.length} step${tour.steps.length !== 1 ? 's' : ''}</div>
+      </div>
+      <button class="edit-btn">✏️</button>
+    </li>
+  `).join('');
+
+  // Add click handlers
+  list.querySelectorAll('li').forEach(li => {
+    li.addEventListener('click', () => {
+      currentTourIndex = parseInt(li.dataset.index);
+      renderTourList();
+      renderEditor();
+    });
+  });
+}
+
+// Render editor for current tour
+function renderEditor() {
+  const empty = document.getElementById('editorEmpty');
+  const content = document.getElementById('editorContent');
+
+  if (currentTourIndex < 0 || !tours[currentTourIndex]) {
+    empty.style.display = 'flex';
+    content.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  content.style.display = 'block';
+
+  const tour = tours[currentTourIndex];
+  document.getElementById('tourId').value = tour.id || '';
+  document.getElementById('tourName').value = tour.name || '';
+  document.getElementById('tourStartUrl').value = tour.startUrl || '';
+
+  renderSteps();
+  updatePreviewLink();
+}
+
+// Render steps list
+function renderSteps() {
+  const tour = tours[currentTourIndex];
+  const container = document.getElementById('stepsList');
+
+  container.innerHTML = tour.steps.map((step, i) => `
+    <div class="step-card" data-index="${i}">
+      <div class="step-header">
+        <div class="step-num">${i + 1}</div>
+        <div class="step-title">${escapeHtml(step.title || 'Untitled Step')}</div>
+        <div class="step-actions">
+          <button class="move-up" title="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button class="move-down" title="Move down" ${i === tour.steps.length - 1 ? 'disabled' : ''}>↓</button>
+          <button class="delete" title="Delete step">×</button>
+        </div>
+      </div>
+      <div class="step-content">
+        <div>
+          <label>Title</label>
+          <input type="text" class="step-title-input" value="${escapeHtml(step.title || '')}" placeholder="Click Settings">
+        </div>
+        <div>
+          <label>Action</label>
+          <select class="step-action">
+            <option value="click" ${step.action === 'click' ? 'selected' : ''}>Click</option>
+            <option value="input" ${step.action === 'input' ? 'selected' : ''}>Input</option>
+            <option value="copy" ${step.action === 'copy' ? 'selected' : ''}>Copy</option>
+            <option value="observe" ${step.action === 'observe' ? 'selected' : ''}>Observe</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>CSS Selector</label>
+          <input type="text" class="step-selector" value="${escapeHtml(step.selector || '')}" placeholder="[data-tab='integrations']">
+        </div>
+        <div class="full">
+          <label>Description</label>
+          <input type="text" class="step-description" value="${escapeHtml(step.description || '')}" placeholder="Click the Integrations tab in the sidebar.">
+        </div>
+        <div>
+          <label>Advance On</label>
+          <select class="step-nextOn">
+            <option value="click" ${step.nextOn === 'click' ? 'selected' : ''}>Click</option>
+            <option value="urlChange" ${step.nextOn === 'urlChange' ? 'selected' : ''}>URL Change</option>
+            <option value="manual" ${step.nextOn === 'manual' ? 'selected' : ''}>Manual (Next button)</option>
+          </select>
+        </div>
+        <div>
+          <label>Tooltip Position</label>
+          <select class="step-position">
+            <option value="" ${!step.position ? 'selected' : ''}>Auto</option>
+            <option value="top" ${step.position === 'top' ? 'selected' : ''}>Top</option>
+            <option value="bottom" ${step.position === 'bottom' ? 'selected' : ''}>Bottom</option>
+            <option value="left" ${step.position === 'left' ? 'selected' : ''}>Left</option>
+            <option value="right" ${step.position === 'right' ? 'selected' : ''}>Right</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Wire up event handlers
+  container.querySelectorAll('.step-card').forEach((card, i) => {
+    card.querySelector('.step-title-input').addEventListener('input', e => {
+      tour.steps[i].title = e.target.value;
+      saveTours();
+    });
+    card.querySelector('.step-action').addEventListener('change', e => {
+      tour.steps[i].action = e.target.value;
+      saveTours();
+    });
+    card.querySelector('.step-selector').addEventListener('input', e => {
+      tour.steps[i].selector = e.target.value;
+      saveTours();
+    });
+    card.querySelector('.step-description').addEventListener('input', e => {
+      tour.steps[i].description = e.target.value;
+      saveTours();
+    });
+    card.querySelector('.step-nextOn').addEventListener('change', e => {
+      tour.steps[i].nextOn = e.target.value;
+      saveTours();
+    });
+    card.querySelector('.step-position').addEventListener('change', e => {
+      tour.steps[i].position = e.target.value || undefined;
+      saveTours();
+    });
+    card.querySelector('.move-up').addEventListener('click', () => {
+      if (i > 0) {
+        [tour.steps[i], tour.steps[i - 1]] = [tour.steps[i - 1], tour.steps[i]];
+        saveTours();
+        renderSteps();
+      }
+    });
+    card.querySelector('.move-down').addEventListener('click', () => {
+      if (i < tour.steps.length - 1) {
+        [tour.steps[i], tour.steps[i + 1]] = [tour.steps[i + 1], tour.steps[i]];
+        saveTours();
+        renderSteps();
+      }
+    });
+    card.querySelector('.delete').addEventListener('click', () => {
+      if (confirm('Delete this step?')) {
+        tour.steps.splice(i, 1);
+        saveTours();
+        renderSteps();
+      }
+    });
+  });
+}
+
+// Update preview link
+function updatePreviewLink() {
+  const tour = tours[currentTourIndex];
+  const linkDiv = document.getElementById('previewLink');
+  if (!tour.id || !tour.startUrl) {
+    linkDiv.style.display = 'none';
+    return;
+  }
+  linkDiv.style.display = 'block';
+  document.getElementById('previewTourId').textContent = tour.id;
+  const url = new URL(tour.startUrl);
+  url.searchParams.set('onboard', tour.id);
+  document.getElementById('previewUrl').textContent = url.toString();
+}
+
+// Create new tour
+function createNewTour() {
+  const tour = {
+    id: 'new-tour-' + Date.now(),
+    name: 'New Tour',
+    startUrl: '',
+    steps: []
+  };
+  tours.push(tour);
+  currentTourIndex = tours.length - 1;
+  saveTours();
+  renderTourList();
+  renderEditor();
+}
+
+// Add new step
+function addStep() {
+  const tour = tours[currentTourIndex];
+  tour.steps.push({
+    id: String(tour.steps.length + 1),
+    selector: '',
+    action: 'click',
+    title: '',
+    description: '',
+    nextOn: 'click'
+  });
+  saveTours();
+  renderSteps();
+}
+
+// Export as JSON
+function exportJson() {
+  const tour = tours[currentTourIndex];
+  // Clean up the tour object for export
+  const exportTour = {
+    id: tour.id,
+    name: tour.name,
+    startUrl: tour.startUrl,
+    steps: tour.steps.map(s => {
+      const step = {
+        id: s.id,
+        selector: s.selector,
+        action: s.action,
+        title: s.title,
+        description: s.description,
+        nextOn: s.nextOn
+      };
+      if (s.position) step.position = s.position;
+      if (s.inputPlaceholder) step.inputPlaceholder = s.inputPlaceholder;
+      return step;
+    })
+  };
+
+  const json = JSON.stringify(exportTour, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${tour.id}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('JSON exported!', 'success');
+}
+
+// Delete current tour
+function deleteTour() {
+  if (!confirm('Delete this tour?')) return;
+  tours.splice(currentTourIndex, 1);
+  currentTourIndex = -1;
+  saveTours();
+  renderTourList();
+  renderEditor();
+  showToast('Tour deleted');
+}
+
+// Preview tour
+function previewTour() {
+  const tour = tours[currentTourIndex];
+  if (!tour.startUrl) {
+    showToast('Set a start URL first');
+    return;
+  }
+  // Store tour in localStorage for preview mode
+  localStorage.setItem(`onboardai_preview_${tour.id}`, JSON.stringify(tour));
+  const url = new URL(tour.startUrl);
+  url.searchParams.set('onboard', tour.id);
+  window.open(url.toString(), '_blank');
+}
+
+// Show toast notification
+function showToast(message, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast' + (type ? ' ' + type : '');
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// HTML escaping
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Event listeners
+document.getElementById('newTourBtn').addEventListener('click', createNewTour);
+document.getElementById('addStepBtn').addEventListener('click', addStep);
+document.getElementById('exportBtn').addEventListener('click', exportJson);
+document.getElementById('previewBtn').addEventListener('click', previewTour);
+document.getElementById('saveBtn').addEventListener('click', () => {
+  saveTours();
+  showToast('Draft saved!', 'success');
+});
+document.getElementById('deleteBtn').addEventListener('click', deleteTour);
+
+// Tour field updates
+document.getElementById('tourId').addEventListener('input', e => {
+  tours[currentTourIndex].id = e.target.value;
+  saveTours();
+  renderTourList();
+  updatePreviewLink();
+});
+document.getElementById('tourName').addEventListener('input', e => {
+  tours[currentTourIndex].name = e.target.value;
+  saveTours();
+  renderTourList();
+});
+document.getElementById('tourStartUrl').addEventListener('input', e => {
+  tours[currentTourIndex].startUrl = e.target.value;
+  saveTours();
+  updatePreviewLink();
+});
+
+// Initialize
+loadTours();
+</script>
+</body>
+</html>

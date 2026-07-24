@@ -1,0 +1,40 @@
+{
+  "id": "connect-ghl",
+  "name": "Connect GoHighLevel",
+  "startUrl": "https://app.workmate.com/settings",
+  "steps": [
+    {
+      "id": "1",
+      "selector": "[data-tab='integrations']",
+      "action": "click",
+      "title": "Open Integrations",
+      "description": "Click the Integrations tab in the sidebar to see available connections.",
+      "nextOn": "click"
+    },
+    {
+      "id": "2",
+      "selector": ".ghl-connect-btn",
+      "action": "click",
+      "title": "Connect GoHighLevel",
+      "description": "Click this button to start the GHL connection process.",
+      "nextOn": "urlChange"
+    },
+    {
+      "id": "3",
+      "selector": "#api-key-input",
+      "action": "input",
+      "title": "Paste your API key",
+      "description": "Go to GHL Settings → API → copy your key and paste it here.",
+      "inputPlaceholder": "Paste your GHL API key...",
+      "nextOn": "manual"
+    },
+    {
+      "id": "4",
+      "selector": ".save-connection-btn",
+      "action": "click",
+      "title": "Save Connection",
+      "description": "Click Save to complete the connection. You'll see a success message when done.",
+      "nextOn": "click"
+    }
+  ]
+}

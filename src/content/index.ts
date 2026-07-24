@@ -1,6 +1,7 @@
 // Content-script wiring: trigger → extract → popup + chat session.
 // Each ⌘-click is a fresh popup and a fresh session; the first answer comes
 // from a hidden seed message. Outside mousedown and Esc close the popup.
+// Also handles guided tour overlays when ?onboard= URL param is present.
 import { initTrigger, type TriggerEvent } from './trigger';
 import { resolveTarget, extractContext } from './extract';
 import { Popup } from './popup';
@@ -8,6 +9,7 @@ import { ChatSession } from './chat';
 import { Spotlight } from './spotlight';
 import { getSettings, onSettingsChanged } from '../shared/settings';
 import type { ChatErrorCode } from '../shared/messages';
+import { initTourEngine } from './tour';
 
 let enabled = true; // assume on until settings load; trigger re-checks live
 let consentAck = false; // one-time "sends page text to Anthropic" notice
@@ -145,3 +147,8 @@ onSettingsChanged((patch) => {
     }
   }
 });
+
+// Initialize guided tour engine — checks for ?onboard= URL param or resumes
+// an in-progress tour from chrome.storage.local.
+const tourEngine = initTourEngine();
+void tourEngine.init();

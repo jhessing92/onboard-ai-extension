@@ -1,0 +1,31 @@
+{
+  "id": "test",
+  "name": "Test Tour - GitHub Navigation",
+  "startUrl": "https://github.com",
+  "steps": [
+    {
+      "id": "1",
+      "selector": "[data-target='qbsearch-input.inputButtonText']",
+      "action": "observe",
+      "title": "Search Bar",
+      "description": "This is the search bar. You can search for repositories, code, users, and more.",
+      "nextOn": "manual"
+    },
+    {
+      "id": "2",
+      "selector": "a[href='/notifications']",
+      "action": "observe",
+      "title": "Notifications",
+      "description": "Click here to see your notifications - issues, PRs, and mentions.",
+      "nextOn": "manual"
+    },
+    {
+      "id": "3",
+      "selector": "[aria-label='Create new...']",
+      "action": "observe",
+      "title": "Create New",
+      "description": "Use this button to create new repositories, gists, organizations, and more.",
+      "nextOn": "manual"
+    }
+  ]
+}
