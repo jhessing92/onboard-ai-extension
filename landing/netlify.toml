@@ -1,0 +1,3 @@
+# When deploying with: npx netlify deploy --prod --dir=. --functions=netlify/functions
+[functions]
+  directory = "netlify/functions"

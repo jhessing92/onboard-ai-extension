@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>OnboardAI by Shoofly — Settings</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 340px;
+      max-width: 460px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: #fffef5;
+      background: #0a1628;
+    }
+    .brand { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .brand img { width: 24px; height: 24px; border-radius: 6px; }
+    .brand h1 { font-size: 16px; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+    .brand h1 span { color: #3eb8d0; font-weight: 600; }
+    .tagline { margin: 0 0 16px; color: #a8d5df; font-size: 12.5px; }
+    label { display: block; font-weight: 600; font-size: 12.5px; margin: 14px 0 5px; color: #a8d5df; }
+    input[type="password"], input[type="text"], select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid rgba(168, 213, 223, 0.25);
+      border-radius: 8px;
+      font-size: 13px;
+      background: #0d2035;
+      color: #fffef5;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: #3eb8d0; }
+    .hint { margin: 5px 0 0; font-size: 11.5px; color: rgba(168, 213, 223, 0.65); }
+    .hint a { color: #3eb8d0; }
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 16px; padding: 10px 12px;
+      border: 1.5px solid rgba(168, 213, 223, 0.2); border-radius: 12px; background: #0d2035;
+    }
+    .toggle-row .t-label { font-weight: 600; font-size: 13px; }
+    .toggle-row .t-sub { font-size: 11.5px; color: rgba(168, 213, 223, 0.65); margin-top: 1px; }
+    .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; cursor: pointer;
+      background: rgba(168, 213, 223, 0.3); border-radius: 999px; transition: background 0.15s;
+    }
+    .slider::before {
+      content: ""; position: absolute; height: 18px; width: 18px;
+      left: 2px; top: 2px; background: #fffef5; border-radius: 50%;
+      transition: transform 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+    .switch input:checked + .slider { background: #3eb8d0; }
+    .switch input:checked + .slider::before { transform: translateX(18px); }
+    button#save {
+      margin-top: 18px; width: 100%; padding: 9px 0;
+      background: linear-gradient(135deg, #e8b848, #d4a84a);
+      color: #0a1628; font-weight: 700; font-size: 13.5px;
+      border: none; border-radius: 9px; cursor: pointer;
+    }
+    button#save:hover { filter: brightness(1.08); }
+    #status { min-height: 18px; margin: 8px 0 0; font-size: 12px; text-align: center; color: #4ade80; }
+    #status.err { color: #f87171; }
+    .privacy {
+      margin-top: 16px; padding: 12px 14px;
+      border: 1px solid rgba(62, 184, 208, 0.3); border-radius: 12px;
+      background: rgba(62, 184, 208, 0.07);
+      font-size: 12px; line-height: 1.55;
+    }
+    .privacy h2 { margin: 0 0 6px; font-size: 12.5px; color: #3eb8d0; }
+    .privacy ul { margin: 4px 0 0; padding-left: 16px; }
+    .privacy li { margin: 2px 0; }
+    .privacy .never { color: #a8d5df; }
+    .howto { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(168, 213, 223, 0.15); font-size: 12px; color: #a8d5df; line-height: 1.5; }
+    .howto kbd {
+      background: #0d2035; border: 1px solid rgba(62, 184, 208, 0.4); border-bottom-width: 2px;
+      border-radius: 4px; padding: 0 4px; font-size: 11px; font-family: inherit; color: #fffef5;
+    }
+    .foot { margin-top: 12px; font-size: 11px; color: rgba(168, 213, 223, 0.5); text-align: center; }
+    .uninstall-section {
+      margin-top: 18px; padding-top: 16px;
+      border-top: 1px solid rgba(168, 213, 223, 0.12);
+    }
+    .uninstall-section p { font-size: 12px; color: #a8d5df; margin: 0 0 10px; }
+    button#uninstall {
+      width: 100%; padding: 9px 0;
+      background: transparent; border: 1.5px solid rgba(248, 113, 113, 0.5);
+      color: #f87171; font-weight: 600; font-size: 13px;
+      border-radius: 9px; cursor: pointer;
+    }
+    button#uninstall:hover { background: rgba(248, 113, 113, 0.1); border-color: #f87171; }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <img src="icons/icon48.png" alt="" />
+    <h1>OnboardAI <span>by Shoofly</span></h1>
+  </div>
+  <p class="tagline">AI onboarding guide for any website.</p>
+
+  <label for="model">Model</label>
+  <select id="model"></select>
+
+  <div class="toggle-row">
+    <div>
+      <div class="t-label">Enable ⌘-click explain</div>
+      <div class="t-sub">Turn off to restore native ⌘-click (open link in new tab).</div>
+    </div>
+    <label class="switch">
+      <input id="enabled" type="checkbox" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <button id="save">Save</button>
+  <p id="status"></p>
+
+  <div class="privacy">
+    <h2>🔒 Privacy by design</h2>
+    <div><strong>Sees</strong> (only when you ⌘-click): the element's label, nearby text, and URL path.</div>
+    <ul class="never">
+      <li><strong>Never</strong> form values, passwords, or what you type.</li>
+      <li><strong>Never</strong> URL tokens (query strings, OAuth codes).</li>
+      <li><strong>No training</strong> — Claude API doesn't learn from your data.</li>
+      <li><strong>No accounts</strong> — nothing to sign up for or sign into.</li>
+    </ul>
+  </div>
+
+  <div class="howto">
+    Hold <kbd>⌘</kbd> (or <kbd>Ctrl</kbd> on Windows) — the page dims and a spotlight follows your cursor —
+    then click any element. OnboardAI explains what it is, and you can ask follow-ups.
+    <kbd>Esc</kbd> or clicking outside closes the popup.
+  </div>
+
+  <p class="foot">Powered by Shoofly · answers by Claude</p>
+
+  <div class="uninstall-section">
+    <p>Done with onboarding? You can remove OnboardAI from Chrome.</p>
+    <button id="uninstall">Remove OnboardAI</button>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

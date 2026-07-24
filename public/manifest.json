@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "OnboardAI by Shoofly",
+  "version": "0.2.0",
+  "description": "Hold ⌘ (Ctrl on Windows) and click any element on any website for an instant AI explanation. Never reads what you type — form values, passwords, and URL tokens stay on the page.",
+  "permissions": ["storage", "management"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'self'"
+  },
+  "host_permissions": ["https://onboardai-shoofly.netlify.app/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "action": {
+    "default_popup": "options.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["cursor.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
