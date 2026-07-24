@@ -1,11 +1,11 @@
-// ⌘/Ctrl-hold trigger, ported from CCSD's use-ccai-trigger:
-// - while the modifier is held, a class on <html> swaps the cursor to the
+// Option-click (Mac) / Alt-click (Win) trigger:
+// - while Option/Alt is held, a class on <html> swaps the cursor to the
 //   OnboardAI sparkle (rule injected via constructed stylesheet — CSP-safe)
 //   and onModifier(true) fires once (edge-triggered) for the spotlight
 // - capture-phase click/mousedown/auxclick listeners swallow the event so the
 //   underlying control never activates, then fire the trigger callback
 // - blur + visibilitychange clear the cursor AND emit onModifier(false) so
-//   ⌘-Tab never leaves a stuck cursor or spotlight.
+//   switching apps never leaves a stuck cursor or spotlight.
 
 export interface TriggerEvent {
   /** Viewport coords of the click (popup anchor point). */
@@ -59,11 +59,11 @@ export function initTrigger(opts: TriggerOptions): Trigger {
   };
   const clearHeld = () => setHeld(false);
 
-  const keyHandler = (e: KeyboardEvent) => setHeld(e.metaKey || e.ctrlKey);
+  const keyHandler = (e: KeyboardEvent) => setHeld(e.altKey);
 
   const mouseHandler = (e: MouseEvent) => {
     if (!opts.isEnabled()) return;
-    if (!e.metaKey && !e.ctrlKey) return;
+    if (!e.altKey) return;
     const path = e.composedPath();
     if (opts.isOurNode(path)) return;
 

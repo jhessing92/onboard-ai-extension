@@ -1,0 +1,29 @@
+functionsDirectory = "/Users/jonathanhessing/Desktop/Cursor Projects/onboard-ai-extension/landing/netlify/functions"
+functionsDirectoryOrigin = "config"
+plugins = []
+headers = []
+redirects = []
+
+[build]
+publish = "/Users/jonathanhessing/Desktop/Cursor Projects/onboard-ai-extension/landing"
+publishOrigin = "default"
+base = "/Users/jonathanhessing/Desktop/Cursor Projects/onboard-ai-extension/landing"
+functions = "/Users/jonathanhessing/Desktop/Cursor Projects/onboard-ai-extension/landing/netlify/functions"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[functions]
+
+[functions."*"]
