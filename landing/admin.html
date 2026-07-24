@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <style>
   :root {
     --navy: #0a1628;
@@ -28,6 +29,49 @@
     line-height: 1.6;
     min-height: 100vh;
   }
+
+  /* Login screen */
+  .login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    text-align: center;
+  }
+  .login-screen .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .login-screen .brand img { width: 48px; height: 48px; border-radius: 10px; }
+  .login-screen .brand span { font-size: 24px; font-weight: 800; color: var(--text); }
+  .login-screen .brand b { color: var(--teal); }
+  .login-screen h1 { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+  .login-screen p { color: var(--muted); margin-bottom: 28px; max-width: 400px; }
+  .login-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--gold1), var(--gold2));
+    color: var(--navy);
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 8px 28px rgba(232, 184, 72, 0.25);
+  }
+  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 36px rgba(232, 184, 72, 0.35); }
+
+  /* App container - hidden until logged in */
+  .app { display: none; }
+  body.logged-in .login-screen { display: none; }
+  body.logged-in .app { display: block; }
 
   /* Header */
   .header {
@@ -50,6 +94,42 @@
   .header .brand img { width: 28px; height: 28px; border-radius: 6px; }
   .header .brand b { color: var(--teal); }
   .header h1 { font-size: 18px; font-weight: 800; }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .user-info .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .logout-btn {
+    padding: 6px 12px;
+    border: 1px solid rgba(62, 184, 208, 0.35);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .logout-btn:hover { border-color: var(--teal); color: var(--text); }
 
   /* Layout */
   .layout {
@@ -357,79 +437,159 @@
     transform: translateY(100px);
     opacity: 0;
     transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+    z-index: 1000;
   }
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.success { border-color: #22c55e; color: #22c55e; }
 </style>
 </head>
 <body>
-<header class="header">
-  <a href="index.html" class="brand">
+
+<!-- Login Screen -->
+<div class="login-screen" id="loginScreen">
+  <div class="brand">
     <img src="icon.png" alt="">
     <span>Onboard<b>AI</b></span>
-  </a>
+  </div>
   <h1>Tour Builder</h1>
-</header>
+  <p>Create step-by-step guided tours to onboard users to any web application.</p>
+  <button class="login-btn" id="loginBtn">Sign In to Continue</button>
+</div>
 
-<div class="layout">
-  <aside class="sidebar">
-    <h2>Your Tours</h2>
-    <ul class="tour-list" id="tourList">
-      <!-- Populated by JS -->
-    </ul>
-    <button class="new-tour-btn" id="newTourBtn">+ New Tour</button>
-  </aside>
-
-  <main class="editor" id="editor">
-    <div class="editor-empty" id="editorEmpty">
-      <p>Select a tour to edit, or create a new one.</p>
+<!-- Main App (hidden until logged in) -->
+<div class="app">
+  <header class="header">
+    <a href="index.html" class="brand">
+      <img src="icon.png" alt="">
+      <span>Onboard<b>AI</b></span>
+    </a>
+    <h1>Tour Builder</h1>
+    <div class="header-right">
+      <div class="user-info">
+        <div class="avatar" id="userAvatar">?</div>
+        <span id="userEmail">user@example.com</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Log Out</button>
     </div>
+  </header>
 
-    <div id="editorContent" style="display: none;">
-      <div class="field">
-        <label>Tour ID</label>
-        <input type="text" id="tourId" placeholder="e.g., connect-ghl">
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>Your Tours</h2>
+      <ul class="tour-list" id="tourList">
+        <!-- Populated by JS -->
+      </ul>
+      <button class="new-tour-btn" id="newTourBtn">+ New Tour</button>
+    </aside>
+
+    <main class="editor" id="editor">
+      <div class="editor-empty" id="editorEmpty">
+        <p>Select a tour to edit, or create a new one.</p>
       </div>
 
-      <div class="field">
-        <label>Tour Name</label>
-        <input type="text" id="tourName" placeholder="e.g., Connect GoHighLevel">
-      </div>
+      <div id="editorContent" style="display: none;">
+        <div class="field">
+          <label>Tour ID</label>
+          <input type="text" id="tourId" placeholder="e.g., connect-ghl">
+        </div>
 
-      <div class="field">
-        <label>Start URL</label>
-        <input type="url" id="tourStartUrl" placeholder="https://app.example.com/settings">
-      </div>
+        <div class="field">
+          <label>Tour Name</label>
+          <input type="text" id="tourName" placeholder="e.g., Connect GoHighLevel">
+        </div>
 
-      <div class="steps-section">
-        <h3>
-          <span>Steps</span>
-          <button class="add-step-btn" id="addStepBtn">+ Add Step</button>
-        </h3>
-        <div id="stepsList">
-          <!-- Steps populated by JS -->
+        <div class="field">
+          <label>Start URL</label>
+          <input type="url" id="tourStartUrl" placeholder="https://app.example.com/settings">
+        </div>
+
+        <div class="steps-section">
+          <h3>
+            <span>Steps</span>
+            <button class="add-step-btn" id="addStepBtn">+ Add Step</button>
+          </h3>
+          <div id="stepsList">
+            <!-- Steps populated by JS -->
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="exportBtn">Export JSON</button>
+          <button class="btn btn-secondary" id="previewBtn">Preview</button>
+          <button class="btn btn-secondary" id="saveBtn">Save Draft</button>
+          <button class="btn btn-danger" id="deleteBtn">Delete</button>
+        </div>
+
+        <div class="preview-link" id="previewLink" style="display: none;">
+          <p>Add <code>?onboard=<span id="previewTourId"></span></code> to any URL to test this tour:</p>
+          <code id="previewUrl"></code>
         </div>
       </div>
-
-      <div class="actions">
-        <button class="btn btn-primary" id="exportBtn">📥 Export JSON</button>
-        <button class="btn btn-secondary" id="previewBtn">👁 Preview</button>
-        <button class="btn btn-secondary" id="saveBtn">💾 Save Draft</button>
-        <button class="btn btn-danger" id="deleteBtn">🗑 Delete</button>
-      </div>
-
-      <div class="preview-link" id="previewLink" style="display: none;">
-        <p>Add <code>?onboard=<span id="previewTourId"></span></code> to any URL to test this tour:</p>
-        <code id="previewUrl"></code>
-      </div>
-    </div>
-  </main>
+    </main>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+// ==========================================
+// Netlify Identity Authentication
+// ==========================================
+const netlifyIdentity = window.netlifyIdentity;
+
+function initAuth() {
+  // Check for existing user
+  const user = netlifyIdentity.currentUser();
+  if (user) {
+    handleLogin(user);
+  }
+
+  // Listen for login
+  netlifyIdentity.on('login', user => {
+    handleLogin(user);
+    netlifyIdentity.close();
+  });
+
+  // Listen for logout
+  netlifyIdentity.on('logout', () => {
+    handleLogout();
+  });
+}
+
+function handleLogin(user) {
+  document.body.classList.add('logged-in');
+
+  // Update user info in header
+  const email = user.email || 'User';
+  document.getElementById('userEmail').textContent = email;
+  document.getElementById('userAvatar').textContent = email.charAt(0).toUpperCase();
+
+  // Load tours after login
+  loadTours();
+}
+
+function handleLogout() {
+  document.body.classList.remove('logged-in');
+  tours = [];
+  currentTourIndex = -1;
+}
+
+// Login button click
+document.getElementById('loginBtn').addEventListener('click', () => {
+  netlifyIdentity.open('login');
+});
+
+// Logout button click
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  netlifyIdentity.logout();
+});
+
+// Initialize auth on page load
+initAuth();
+
+// ==========================================
 // Tour Builder App
+// ==========================================
 const STORAGE_KEY = 'onboardai_tours_draft';
 
 let tours = [];
@@ -753,9 +913,6 @@ document.getElementById('tourStartUrl').addEventListener('input', e => {
   saveTours();
   updatePreviewLink();
 });
-
-// Initialize
-loadTours();
 </script>
 </body>
 </html>
