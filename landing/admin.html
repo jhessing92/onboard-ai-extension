@@ -422,6 +422,73 @@
     word-break: break-all;
   }
 
+  /* Document parser section */
+  .parse-section {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: rgba(62, 184, 208, 0.08);
+    border: 1px solid rgba(62, 184, 208, 0.25);
+    border-radius: 12px;
+  }
+  .parse-section h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--teal);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .parse-section textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1.5px solid rgba(168, 213, 223, 0.25);
+    border-radius: 9px;
+    background: rgba(255, 254, 245, 0.06);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    margin-bottom: 10px;
+  }
+  .parse-section textarea:focus {
+    border-color: var(--teal);
+    background: rgba(255, 254, 245, 0.1);
+  }
+  .parse-section textarea::placeholder { color: rgba(168, 213, 223, 0.55); }
+  .parse-section .parse-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .parse-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--teal), #2a9db5);
+    color: var(--navy);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .parse-btn:hover { filter: brightness(1.1); }
+  .parse-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .parse-btn .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(10, 22, 40, 0.3);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   /* Toast notification */
   .toast {
     position: fixed;
@@ -501,6 +568,13 @@
         <div class="field">
           <label>Start URL</label>
           <input type="url" id="tourStartUrl" placeholder="https://app.example.com/settings">
+        </div>
+
+        <div class="parse-section">
+          <h4>📄 Generate Steps from Document</h4>
+          <textarea id="docContent" placeholder="Paste your Google Doc URL or the document text here..."></textarea>
+          <p class="parse-hint">Paste a published Google Doc link or copy/paste the onboarding instructions. AI will extract the steps.</p>
+          <button class="parse-btn" id="parseBtn">✨ Generate Steps with AI</button>
         </div>
 
         <div class="steps-section">
@@ -913,6 +987,116 @@ document.getElementById('tourStartUrl').addEventListener('input', e => {
   saveTours();
   updatePreviewLink();
 });
+
+// ==========================================
+// Document Parsing with AI
+// ==========================================
+
+document.getElementById('parseBtn').addEventListener('click', parseDocument);
+
+async function parseDocument() {
+  const input = document.getElementById('docContent').value.trim();
+  if (!input) {
+    showToast('Please paste document content or a Google Doc URL');
+    return;
+  }
+
+  const btn = document.getElementById('parseBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Parsing...';
+
+  try {
+    let content = input;
+
+    // Check if it's a Google Doc URL
+    const gdocMatch = input.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/);
+    if (gdocMatch) {
+      // Try to fetch published Google Doc
+      const docId = gdocMatch[1];
+      const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
+      try {
+        const res = await fetch(exportUrl);
+        if (res.ok) {
+          content = await res.text();
+        } else {
+          showToast('Could not fetch Google Doc. Make sure it\'s published to web or paste the text directly.');
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          return;
+        }
+      } catch (e) {
+        showToast('Could not fetch Google Doc. Paste the text directly instead.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        return;
+      }
+    }
+
+    // Call Anthropic API to parse the document
+    const steps = await parseWithAI(content);
+
+    if (steps && steps.length > 0) {
+      // Add steps to current tour
+      const tour = tours[currentTourIndex];
+      tour.steps = steps;
+      saveTours();
+      renderSteps();
+      showToast(`Generated ${steps.length} steps!`, 'success');
+      document.getElementById('docContent').value = '';
+    } else {
+      showToast('Could not extract steps from document');
+    }
+  } catch (e) {
+    console.error('Parse error:', e);
+    showToast('Error parsing document: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = originalText;
+}
+
+async function parseWithAI(content) {
+  const systemPrompt = `You are a tour step extractor. Given onboarding documentation, extract the steps as a JSON array.
+
+Each step should have:
+- id: sequential number as string ("1", "2", etc.)
+- title: short action title (e.g., "Click Settings")
+- description: helpful description of what to do
+- selector: CSS selector guess based on the element description (e.g., "[data-tab='settings']", ".settings-btn", "#api-key-input")
+- action: one of "click", "input", "copy", "observe"
+- nextOn: one of "click", "urlChange", "manual"
+
+Return ONLY valid JSON array, no markdown, no explanation. Example:
+[{"id":"1","title":"Open Settings","description":"Click the gear icon in the top right corner.","selector":".settings-icon","action":"click","nextOn":"click"}]`;
+
+  const response = await fetch('/.netlify/functions/anthropic', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      messages: [
+        { role: 'user', content: systemPrompt + '\n\nDocument to parse:\n\n' + content }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('API request failed');
+  }
+
+  const data = await response.json();
+  const text = data.content?.[0]?.text || '';
+
+  // Extract JSON from response
+  const jsonMatch = text.match(/\[[\s\S]*\]/);
+  if (jsonMatch) {
+    return JSON.parse(jsonMatch[0]);
+  }
+
+  throw new Error('No valid JSON in response');
+}
 </script>
 </body>
 </html>
