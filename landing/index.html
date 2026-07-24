@@ -6,6 +6,7 @@
 <title>OnboardAI by Shoofly — ⌘-click any website. Understand it instantly.</title>
 <meta name="description" content="OnboardAI is a free Chrome extension: hold ⌘ and click any element on any website to get an instant AI explanation. No signup, no API key, no training on your data.">
 <link rel="icon" href="icon.png">
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -531,6 +532,19 @@
     setTimeout(() => { this.textContent = 'Copy'; }, 2000);
   });
 })();
+</script>
+
+<script>
+  // Handle Netlify Identity redirects (invite confirmation, password recovery)
+  if (window.netlifyIdentity) {
+    window.netlifyIdentity.on('init', user => {
+      if (!user) {
+        window.netlifyIdentity.on('login', () => {
+          document.location.href = '/admin.html';
+        });
+      }
+    });
+  }
 </script>
 
 </body>
