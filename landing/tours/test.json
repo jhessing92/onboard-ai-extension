@@ -1,0 +1,31 @@
+{
+  "id": "test",
+  "name": "Test Tour",
+  "startUrl": "",
+  "steps": [
+    {
+      "id": "1",
+      "selector": "body",
+      "action": "observe",
+      "title": "Welcome to OnboardAI!",
+      "description": "This is a test tour to verify the overlay is working. Click Next to continue.",
+      "nextOn": "manual"
+    },
+    {
+      "id": "2",
+      "selector": "a",
+      "action": "observe",
+      "title": "Links on the Page",
+      "description": "Here's an example of highlighting an element. The tour can guide users through any web application.",
+      "nextOn": "manual"
+    },
+    {
+      "id": "3",
+      "selector": "body",
+      "action": "observe",
+      "title": "Tour Complete!",
+      "description": "You've finished the test tour. In a real tour, users would be guided through specific actions step by step.",
+      "nextOn": "manual"
+    }
+  ]
+}
